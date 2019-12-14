@@ -356,19 +356,6 @@ const getOrders_Callback = (error, response, data) => {
   }
   if((data!=null) && (Symbol.iterator in Object(data))){
     lastSellPriceData = data;
-
-    // for (let j = 0; j < data.length; j++) {
-    //   if(settings.crypto[i].usdPair===data[j].product_id){
-    //     if (settings.crypto[i].lastSellOrderPrice===undefined){
-    //       settings.crypto[i].lastSellOrderPrice = data[j].price;
-    //       settings.crypto[i].lastSellOrderSize = data[j].size;
-    //     } else if (settings.crypto[i].lastSellOrderPrice>data[j].price){
-    //       settings.crypto[i].lastSellOrderPrice = data[j].price;
-    //       settings.crypto[i].lastSellOrderSize = data[j].size;
-    //     }
-        
-    //   }
-    // }
   }
 }
 
@@ -378,9 +365,9 @@ var trading = setInterval(() => {
     authenticatedClient = new CBPTT.AuthenticatedClient(KEY, SECRET, PASSPHRASE, CBPTT_URI);
     publicClient = new CBPTT.PublicClient(CBPTT_URI);
 
-    // Get the balance of the wallets and execute the trading strategy
+    // Saves account balances and order history in arrays to not exceed the API call limit 
     authenticatedClient.getAccounts(getAccounts_Callback);
     authenticatedClient.getOrders(getOrders_Callback);
     // numberOfCyclesCompleted++;
 
-}, 2000);
+}, 1000);
