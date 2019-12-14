@@ -1,0 +1,121 @@
+{ 
+    "API" : {
+        "PASSPHRASE" : "",
+        "KEY" : "",
+        "SECRET" : ""
+    },
+    "crypto" : [
+        {
+            "ticker" : "BTC",
+            "usdPair" : "BTC-USD",
+            "enabled" : true,
+            "name" : "Bitcoin",
+            "significantValues" : 3,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "ETH",
+            "usdPair" : "ETH-USD",
+            "enabled" : true,
+            "name" : "Ether",
+            "significantValues" : 2,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "XRP",
+            "usdPair" : "XRP-USD",
+            "enabled" : true,
+            "name" : "Ripple",
+            "significantValues" : 0,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "LTC",
+            "usdPair" : "LTC-USD",
+            "enabled" : true,
+            "name" : "Litecoin",
+            "significantValues" : 1,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "BCH",
+            "usdPair" : "BCH-USD",
+            "enabled" : true,
+            "name" : "Bitcoin Cash",
+            "significantValues" : 2,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "EOS",
+            "usdPair" : "EOS-USD",
+            "enabled" : true,
+            "name" : "EOS",
+            "significantValues" : 1,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "DASH",
+            "usdPair" : "DASH-USD",
+            "enabled" : true,
+            "name" : "Dash",
+            "significantValues" : 2,
+            "minPurchase" : 1.00
+        },
+        {
+            "ticker" : "XLM",
+            "usdPair" : "XLM-USD",
+            "enabled" : true,
+            "name" : "Stellar Lumens",
+            "significantValues" : 0,
+            "minPurchase" : 0.10
+        },
+        {
+            "ticker" : "XTZ",
+            "usdPair" : "XTZ-USD",
+            "enabled" : true,
+            "name" : "Tezos",
+            "significantValues" : 0,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "ETC",
+            "usdPair" : "ETC-USD",
+            "enabled" : true,
+            "name" : "Ether Classic",
+            "significantValues" : 1,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "LINK",
+            "usdPair" : "LINK-USD",
+            "enabled" : true,
+            "name" : "Chainlink",
+            "significantValues" : 0,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "REP",
+            "usdPair" : "REP-USD",
+            "enabled" : true,
+            "name" : "Augur",
+            "significantValues" : 1,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "ZRX",
+            "usdPair" : "ZRX-USD",
+            "enabled" : true,
+            "name" : "0x",
+            "significantValues" : 0,
+            "minPurchase" : 10.00
+        },
+        {
+            "ticker" : "ALGO",
+            "usdPair" : "ALGO-USD",
+            "enabled" : true,
+            "name" : "Algorand",
+            "significantValues" : 0,
+            "minPurchase" : 10.00
+        }
+    ]    
+}
