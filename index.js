@@ -135,8 +135,8 @@ websocket.on('message', data => {
       for(var item of jsonData){
         for (let i = 0; i < settings.crypto.length; i++) {
           if(item.currency==="USD"){
-            usdAvailable = parseFloat(item.available).toFixed(2)-.01;
-            usdBalance = parseFloat(item.balance).toFixed(2)-.01;
+            usdAvailable = parseFloat(item.available);
+            usdBalance = parseFloat(item.balance);
           }
           if(item.currency===settings.crypto[i].ticker){
             settings.crypto[i].available = parseFloat(item.available).toFixed(8);
