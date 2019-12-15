@@ -121,6 +121,7 @@ websocket.on('message', data => {
         settings.crypto[i].average_24h = ((Number(data.high_24h)+Number(data.low_24h))/2).toFixed(4);
         settings.crypto[i].percentChange_open_24h = (((data.best_ask/data.open_24h)-1)*100).toFixed(2);
         settings.crypto[i].percentChange_average_24h = (((data.best_ask/settings.crypto[i].average_24h)-1)*100).toFixed(2);
+        settings.crypto[i].status  = "";
         
         // settings.crypto[i].available = null;
         // settings.crypto[i].balance = null;
@@ -149,10 +150,10 @@ websocket.on('message', data => {
         for (let j = 0; j < settings.crypto.length; j++) {
           if(settings.crypto[j].usdPair===sale.product_id){
             if (settings.crypto[j].lastSellOrderPrice===undefined){
-              settings.crypto[j].lastSellOrderPrice = parseFloat(sale.price).toFixed(4);
+              settings.crypto[j].lastSellOrderPrice = parseFloat(sale.price).toFixed(8);
               settings.crypto[j].lastSellOrderSize = sale.size;
             } else if (settings.crypto[j].lastSellOrderPrice>sale.price){
-              settings.crypto[j].lastSellOrderPrice = parseFloat(sale.price).toFixed(4);
+              settings.crypto[j].lastSellOrderPrice = parseFloat(sale.price).toFixed(8);
               settings.crypto[j].lastSellOrderSize = sale.size;
             }
             
@@ -177,8 +178,6 @@ websocket.on('message', data => {
           settings.crypto[i].lastBuyOrderPrice = parseFloat(data.price);
           settings.crypto[i].lastBuyOrderSize = parseFloat(data.size);
         }
-   
-        placeSellOrder();
       }
 
       const getFilledPrice_Callback = (error, response, data) => {
@@ -249,8 +248,21 @@ websocket.on('message', data => {
       // settings.crypto[i].sellBackPrice = settings.crypto[i].lastBuyOrderPrice*((100+PROFIT_PERCENTAGE*2)/100);
       
       if (settings.crypto[i].percentChange_average_24h <= (settings.crypto[i].buyingThrottle-PROFIT_PERCENTAGE) && usdAvailable > settings.crypto[i].minPurchase) {
+        console.log("Placing BUY Order");
+        setTimeout(() => {
           placeBuyOrder();
-          usdAvailable = usdAvailable - (settings.crypto[i].lastBuyOrderPrice*settings.crypto[i].lastBuyOrderSize);
+        }, 500);        
+
+        while (settings.crypto[i].lastBuyOrderPrice!==settings.crypto[i].currentBuyOrderPrice) {
+          settings.crypto[i].status = "PLACING BUY ORDER";
+        }  
+        
+        settings.crypto[i].status = "BUY ORDER PLACED";
+        // usdAvailable = usdAvailable - (settings.crypto[i].lastBuyOrderPrice*settings.crypto[i].lastBuyOrderSize);
+        setTimeout(function () {
+          settings.crypto[i].status = "";
+          placeSellOrder();
+        }, 1500);
       }
 
       function placeBuyOrder(){
@@ -258,7 +270,7 @@ websocket.on('message', data => {
         settings.crypto[i].buyPercentage = Math.floor(Math.abs(settings.crypto[i].percentChange_average_24h))*(BASE_INVESTMENT_PERCENTAGE);
     
         while (settings.crypto[i].buyPercentage*usdAvailable<settings.crypto[i].minPurchase && settings.crypto[i].buyPercentage<=1){
-          settings.crypto[i].buyPercentage = settings.crypto[i].buyPercentage + .1;
+          settings.crypto[i].buyPercentage = settings.crypto[i].buyPercentage + BASE_INVESTMENT_PERCENTAGE;
         }
     
         // If a Buy order will make the USD Available less than $10, 
@@ -268,13 +280,19 @@ websocket.on('message', data => {
         }
 
         settings.crypto[i].buyingThrottle = settings.crypto[i].percentChange_average_24h;
-    
+        settings.crypto[i].currentBuyOrderPrice = settings.crypto[i].bestAsk;
+        settings.crypto[i].currentBuyOrderSize = ((settings.crypto[i].buyPercentage*usdAvailable)/settings.crypto[i].bestAsk).toFixed(settings.crypto[i].significantValues);
+
         const buyParams = {
-            price: settings.crypto[i].bestAsk,
-            size: ((settings.crypto[i].buyPercentage*usdAvailable)/settings.crypto[i].bestAsk).toFixed(settings.crypto[i].significantValues),
+            price: settings.crypto[i].currentBuyOrderPrice,
+            size: settings.crypto[i].currentBuyOrderSize,
+            side: "buy",
+            // funds: settings.crypto[i].buyPercentage*(usdAvailable.toFixed(2)-.01),
+            // funds: buyOrderFunds,
             product_id: settings.crypto[i].usdPair
         }
-        authenticatedClient.buy(buyParams, buyOrder_Callback);
+        // usdAvailable = usdAvailable - buyOrderFunds;
+        authenticatedClient.placeOrder(buyParams, buyOrder_Callback);
       }
 
       function placeSellOrder(){
@@ -308,9 +326,9 @@ websocket.on('message', data => {
           }
 
           if (coin.lastBuyOrderPrice!=null){
-            console.log(FgBrightGreen, ` [${coin.ticker}]  A: ${coin.available}  B: ${coin.balance}  C: ${coin.bestAsk}  24h Avg: ${coin.average_24h}  %: ${coin.percentChange_average_24h}%  Throttle: ${coin.buyingThrottle} Buy Count: ${coin.buyCount}  Last Buy: ${coin.lastBuyOrderSize} @ $${coin.lastBuyOrderPrice}`, Reset);
+            console.log(FgBrightGreen, ` [${coin.ticker}]  A: ${coin.available}  B: ${coin.balance}  C: ${coin.bestAsk}  24h Avg: ${coin.average_24h}  %: ${coin.percentChange_average_24h}%  Throttle: ${coin.buyingThrottle} Buy Count: ${coin.buyCount}  Last Buy: ${coin.lastBuyOrderSize} @ $${coin.lastBuyOrderPrice}    ${coin.status}`, Reset);
           }  else{
-            console.log(FgBrightGreen, ` [${coin.ticker}]  A: ${coin.available}  B: ${coin.balance}  C: ${coin.bestAsk}  24h Avg: ${coin.average_24h}  %: ${coin.percentChange_average_24h}%  Throttle: ${coin.buyingThrottle} Buy Count: ${coin.buyCount}`, Reset);
+            console.log(FgBrightGreen, ` [${coin.ticker}]  A: ${coin.available}  B: ${coin.balance}  C: ${coin.bestAsk}  24h Avg: ${coin.average_24h}  %: ${coin.percentChange_average_24h}%  Throttle: ${coin.buyingThrottle} Buy Count: ${coin.buyCount}    ${coin.status}`, Reset);
           }
 
         } else if (coin.percentChange_average_24h<0){
@@ -321,9 +339,9 @@ websocket.on('message', data => {
           }
           
           if (coin.lastBuyOrderPrice!=null){
-            console.log(FgBrightRed, ` [${coin.ticker}]  A: ${coin.available}  B: ${coin.balance}  C: ${coin.bestAsk}  24h Avg: ${coin.average_24h}  %: ${coin.percentChange_average_24h}%  Throttle: ${coin.buyingThrottle} Buy Count: ${coin.buyCount}  Last Buy: ${coin.lastBuyOrderSize} @ $${coin.lastBuyOrderPrice}`, Reset);
+            console.log(FgBrightRed, ` [${coin.ticker}]  A: ${coin.available}  B: ${coin.balance}  C: ${coin.bestAsk}  24h Avg: ${coin.average_24h}  %: ${coin.percentChange_average_24h}%  Throttle: ${coin.buyingThrottle} Buy Count: ${coin.buyCount}  Last Buy: ${coin.lastBuyOrderSize} @ $${coin.lastBuyOrderPrice}    ${coin.status}`, Reset);
           } else{
-            console.log(FgBrightRed, ` [${coin.ticker}]  A: ${coin.available}  B: ${coin.balance}  C: ${coin.bestAsk}  24h Avg: ${coin.average_24h}  %: ${coin.percentChange_average_24h}%  Throttle: ${coin.buyingThrottle} Buy Count: ${coin.buyCount}`, Reset);
+            console.log(FgBrightRed, ` [${coin.ticker}]  A: ${coin.available}  B: ${coin.balance}  C: ${coin.bestAsk}  24h Avg: ${coin.average_24h}  %: ${coin.percentChange_average_24h}%  Throttle: ${coin.buyingThrottle} Buy Count: ${coin.buyCount}    ${coin.status}`, Reset);
           }
 
         }
