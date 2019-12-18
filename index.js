@@ -2,7 +2,7 @@
  ============================================================================
  Name        : Coinbase Pro Trading Bot
  Author      : ZachHoskins
- Version     : 4.0
+ Version     : 4.2
  Copyright   : GNU General Public License (GPLv3)
  Description : Trading bot for the Coinbase Pro exchange
  ============================================================================
@@ -13,7 +13,7 @@ const fs = require('fs');
 const CBPTT = require('coinbase-pro');
 const CBPTT_URI = 'https://api.pro.coinbase.com';
 const WEBSOCKET_URI = 'wss://ws-feed.pro.coinbase.com'
-const APP_VERSION = "v4.0";
+const APP_VERSION = "v4.2";
 
   // Profit percentage for buying/selling
   const PROFIT_PERCENTAGE = 1; // DO NOT PUT LESS THAN 1. OTHERWISE YOU WILL LOSE MONEY. (Maker Fee is usually .5% and Taker fee is usually .5%)
@@ -21,7 +21,7 @@ const APP_VERSION = "v4.0";
   // Start Time & Time Between Each Cycle
   const INTERVAL_TIME = 5000; // In Milliseconds 30,000ms = 30s
 
-  // Lowest Investment Amount
+  // Lowest Investment Percentage
   const BASE_INVESTMENT_PERCENTAGE = 0.05; // 1.0 = 100%
 
   // #region Console Text Formatting
@@ -71,6 +71,53 @@ const APP_VERSION = "v4.0";
   BgBrightWhite = "\x1b[107m"
 // #endregion
 
+// #region Parameters
+if(process.argv[2]==="-clearJSON"){
+  let rawTempData = fs.readFileSync('./settings.json');
+  let tempSettings = JSON.parse(rawTempData);
+
+  tempSettings.crypto.forEach(coin => {
+      coin.sellThrottle = 0;
+      coin.buyThrottle = 0;
+  });
+
+  fs.writeFile('settings.json', JSON.stringify(tempSettings), (err) => {
+      if (err) throw err;
+  });
+
+} else if (process.argv[2]==="-enableAll"){
+  let rawTempData = fs.readFileSync('./settings.json');
+  let tempSettings = JSON.parse(rawTempData);
+
+  tempSettings.crypto.forEach(coin => {
+      coin.enabled = true;
+  });
+
+  fs.writeFileSync('settings.json', JSON.stringify(tempSettings), (err) => {
+      if (err) throw err;
+  });
+} else {
+  let rawTempData = fs.readFileSync('./settings.json');
+  let tempSettings = JSON.parse(rawTempData);
+
+  tempSettings.crypto.forEach(coin => {
+      if(coin.ticker===process.argv[2]){
+          coin.enabled = true;
+      } else{
+          coin.enabled = false;
+      }
+  });
+
+  fs.writeFile('settings.json', JSON.stringify(tempSettings), (err) => {
+      if (err) throw err;
+  });
+  tempSettings.crypto.forEach(coin => {
+      if(coin.enabled===true){
+          console.log(coin.name + " - " + coin.ticker);
+      }
+  });
+}
+// #endregion
 
 // Reading JSON Data
 let rawcrypto = fs.readFileSync('./settings.json');
@@ -185,7 +232,7 @@ websocket.on('message', data => {
           var dateTime = new Date();
           let FILE_NAME = `${dateTime.getFullYear()}${dateTime.getMonth()+1}${dateTime.getDate()}-${dateTime.getHours()}${dateTime.getMinutes()}`;
           
-          fs.writeFile(`debug/${FILE_NAME}-getFilledPrice.log`, `${dateTime.toDateString()}\n getFilledPrice_Callback:\n\n ${data}`, (err) => { 
+          fs.writeFile(`debug/${FILE_NAME}-getFilledPrice.log`, `${dateTime.toDateString()}\n getFilledPrice_Callback:\n\n ${data[0]}`, (err) => { 
                           
               // In case of a error throw err. 
               if (err) throw err; 
@@ -229,10 +276,10 @@ websocket.on('message', data => {
           settings.crypto[i].sellPlacedCount++;
         }
         
-        // return console.log(data);
-        if(settings.crypto[i].available>0){
-          placeSellOrder();
-        }
+        // // return console.log(data);
+        // if(settings.crypto[i].available>0){
+        //   placeSellOrder();
+        // }
       }
 
 
@@ -251,7 +298,7 @@ websocket.on('message', data => {
         console.log("Placing BUY Order");
         setTimeout(() => {
           placeBuyOrder();
-        }, 500);        
+        }, i * 1000);        
 
         while (settings.crypto[i].lastBuyOrderPrice!==settings.crypto[i].currentBuyOrderPrice) {
           settings.crypto[i].status = "PLACING BUY ORDER";
@@ -262,7 +309,7 @@ websocket.on('message', data => {
         setTimeout(function () {
           settings.crypto[i].status = "";
           placeSellOrder();
-        }, 1500);
+        }, (i+1)*1500);
       }
 
       function placeBuyOrder(){
@@ -306,6 +353,7 @@ websocket.on('message', data => {
 
     };
 
+    // Keeps everything on one Command Prompt window
     // console.clear();
 
     // console.log(`CURRENT PRICES FROM COINBASE PRO:\n`);
