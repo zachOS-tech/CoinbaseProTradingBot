@@ -72,7 +72,7 @@ const APP_VERSION = "v4.2";
 // #endregion
 
 // #region Parameters
-if(process.argv[2]==="-clearJSON"){
+if(process.argv[2]==="-clear"){
   let rawTempData = fs.readFileSync('./settings.json');
   let tempSettings = JSON.parse(rawTempData);
 
@@ -84,38 +84,151 @@ if(process.argv[2]==="-clearJSON"){
   fs.writeFile('settings.json', JSON.stringify(tempSettings), (err) => {
       if (err) throw err;
   });
+  console.clear();
+  return console.log(FgBrightGreen, "buyThrottle and sellThrottle values reset to 0\n", Reset);
 
-} else if (process.argv[2]==="-enableAll"){
-  let rawTempData = fs.readFileSync('./settings.json');
-  let tempSettings = JSON.parse(rawTempData);
+} else if (process.argv[2]==="-enable"){
+  if(process.argv[3]==="all" || !(process.argv[3])){
+    let rawTempData = fs.readFileSync('./settings.json');
+    let tempSettings = JSON.parse(rawTempData);
 
-  tempSettings.crypto.forEach(coin => {
-      coin.enabled = true;
-  });
+    tempSettings.crypto.forEach(coin => {
+        coin.enabled = true;
+    });
 
-  fs.writeFileSync('settings.json', JSON.stringify(tempSettings), (err) => {
-      if (err) throw err;
-  });
-} else {
-  let rawTempData = fs.readFileSync('./settings.json');
-  let tempSettings = JSON.parse(rawTempData);
-
-  tempSettings.crypto.forEach(coin => {
-      if(coin.ticker===process.argv[2]){
-          coin.enabled = true;
-      } else{
-          coin.enabled = false;
-      }
-  });
-
-  fs.writeFile('settings.json', JSON.stringify(tempSettings), (err) => {
-      if (err) throw err;
-  });
-  tempSettings.crypto.forEach(coin => {
+    fs.writeFileSync('settings.json', JSON.stringify(tempSettings), (err) => {
+        if (err) throw err;
+    });
+    console.clear();
+    tempSettings.crypto.forEach(coin => {
       if(coin.enabled===true){
-          console.log(coin.name + " - " + coin.ticker);
+        console.log(FgBrightGreen, `${coin.ticker} - enabled`, Reset);
+      } else{
+        console.log(FgBrightRed, `${coin.ticker} - disabled`, Reset);
       }
+    });
+    return;
+  } else if (process.argv[3]){
+      let rawTempData = fs.readFileSync('./settings.json');
+      let tempSettings = JSON.parse(rawTempData);
+    
+      tempSettings.crypto.forEach(coin => {
+          for (let i = 3; i < process.argv.length; i++) {
+            if(coin.ticker===process.argv[i]){
+              coin.enabled = true;
+            }
+          }
+      });
+    
+      fs.writeFile('settings.json', JSON.stringify(tempSettings), (err) => {
+          if (err) throw err;
+      });
+      console.clear();
+      tempSettings.crypto.forEach(coin => {
+        if(coin.enabled===true){
+          console.log(FgBrightGreen, `${coin.ticker} - enabled`, Reset);
+        } else{
+          console.log(FgBrightRed, `${coin.ticker} - disabled`, Reset);
+        }
+      });
+      return;
+  }
+} else if (process.argv[2]==="-disable"){
+  if(process.argv[3]==="all" || !(process.argv[3])){
+    let rawTempData = fs.readFileSync('./settings.json');
+    let tempSettings = JSON.parse(rawTempData);
+
+    tempSettings.crypto.forEach(coin => {
+        coin.enabled = false;
+    });
+
+    fs.writeFileSync('settings.json', JSON.stringify(tempSettings), (err) => {
+        if (err) throw err;
+    });
+    console.clear();
+    tempSettings.crypto.forEach(coin => {
+      if(coin.enabled===true){
+        console.log(FgBrightGreen, `${coin.ticker} - enabled`, Reset);
+      } else{
+        console.log(FgBrightRed, `${coin.ticker} - disabled`, Reset);
+      }
+    });
+    return;
+  } else if (process.argv[3]){
+      let rawTempData = fs.readFileSync('./settings.json');
+      let tempSettings = JSON.parse(rawTempData);
+    
+      tempSettings.crypto.forEach(coin => {    
+          for (let i = 3; i < process.argv.length; i++) {
+            if(coin.ticker===process.argv[i]){
+              coin.enabled = false;
+            }
+          }
+      });
+    
+      fs.writeFile('settings.json', JSON.stringify(tempSettings), (err) => {
+          if (err) throw err;
+      });
+      console.clear();
+      tempSettings.crypto.forEach(coin => {
+        if(coin.enabled===true){
+          console.log(FgBrightGreen, `${coin.ticker} - enabled`, Reset);
+        } else{
+          console.log(FgBrightRed, `${coin.ticker} - disabled`, Reset);
+        }
+      });
+      return;
+  }
+} else if(process.argv[2]==="-show") {
+  let rawTempData = fs.readFileSync('./settings.json');
+  let tempSettings = JSON.parse(rawTempData);
+
+  console.clear();
+  tempSettings.crypto.forEach(coin => {
+    if(coin.enabled===true){
+      console.log(FgBrightGreen, `${coin.ticker} - enabled`, Reset);
+    } else{
+      console.log(FgBrightRed, `${coin.ticker} - disabled`, Reset);
+    }
   });
+  return;
+} else if(process.argv[2]==="-help"){
+    return console.log(`
+Automated Trading bot for use with the Coinbase Pro exchange.
+    
+SYNTAX
+    NODE [filename] [[-enable] <string>] [[-disable] <string>] [-show] [-help]
+
+PARAMETERS    
+  NODE [filename]
+
+  -enable       Enables all Cryptocurrency in settings.json and displays status of all currency
+    all         Enables all Cryptocurrency in settings.json and displays status of all currency
+    <ticker>    Enables all tickers matching the given value. Multiple tickers separated by a space
+      (ex)        node index -enable BTC ETH LTC
+  -disable      Disables all Cryptocurrency in settings.json and displays status of all currency
+    all         Disables all Cryptocurrency in settings.json and displays status of all currency
+    <ticker>    Disables all tickers matching the given value. Multiple tickers separated by a space
+      (ex)        node index -disable BTC ETH LTC  
+  -show         Displays status of all currency
+  -help         Displays the help screen
+  
+EXAMPLES
+  ENABLE
+    node index -enable
+    node index -enable all
+    node index -enable BTC ETH
+
+  DISABLE
+    node index -disable
+    node index -disable all
+    node index -disable XRP ETH LTC EOS REP
+
+  DISPLAY STATUS
+    node index -show
+`);
+} else if(process.argv[2]) {
+  return console.log(FgBrightRed, `${process.argv[2]} : The term '${process.argv[2]}' is not recognized as a valid parameter for the CoinbaseProTradingBot application.\n Check the spelling of the name and try again.\n\n For a list of commands, please type 'node ${process.argv[1].replace(/^.*[\\\/]/, '')} -help'`, Reset);
 }
 // #endregion
 
